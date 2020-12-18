@@ -26,9 +26,9 @@ io.on("connection", function(socket) {
         var rooms = io.sockets.adapter.rooms;
         console.log("rooms:", rooms);
 
-        // check to see if room already exists
+        //check to see if room already exists
         //var room = io.sockets.adapter.rooms.get(roomName);
-        //console.log("room:", room);
+
 
         var room = rooms.get(roomName);
 
@@ -39,13 +39,46 @@ io.on("connection", function(socket) {
             console.log("Room Created");
             console.log("room:", io.sockets.adapter.rooms.get(roomName) );
 
+            // let the client know we created a room
+            socket.emit("created");
         }
         else if (room.size == 1) {
             socket.join(roomName);
             console.log("Room Joined");
+            socket.emit("joined");
         }
         else {
             console.log("Room full (2 people max) for now");
+            socket.emit("full");
         }
     });
+
+    // let know that some one joined the room with a 'ready' event
+    // everything our server gets a 'ready' event, it broadcast that event to the 
+    // other peers in the room
+    socket.on("ready", function(roomName) {
+        console.log("recieved *ready* events on server!")
+        socket.broadcast.to(roomName).emit("ready");
+    });
+
+    // we also have to send ICE candidate to get the 'public' address.
+    socket.on("candidate", function(candidate, roomName) {
+        console.log("recieved *candidate* event on server!")
+        socket.broadcast.to(roomName).emit("candidate", candidate);
+    });
+
+    // Offer and Answer - STP
+    // Server needs to broadcast offer and answer
+    socket.on("offer", function(offer, roomName) {
+        console.log("recieved *offer* event on server!")
+        socket.broadcast.to(roomName).emit("offer", offer);
+    });
+
+    socket.on("answer", function(answer, roomName) {
+        console.log("recieved *answer* event on server!")
+        socket.broadcast.to(roomName).emit("answer", answer);
+    });    
 });
+
+
+

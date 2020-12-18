@@ -31,7 +31,8 @@ io.on("connection", function(socket) {
 
 
         var room = rooms.get(roomName);
-
+        console.log("roomName: ", roomName);
+        
         // if room is undefined, we will dynamically create one.
         if (room == undefined) {
             // no room exists so create on

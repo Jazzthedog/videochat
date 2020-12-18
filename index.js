@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require("express");
 const socket = require("socket.io");
 const app = express();
 
@@ -8,7 +8,7 @@ var server = app.listen(4000, function() {
 });
 
 // interesting use of this method to point to a folder?? this will render index.html by default.
-app.use(express.static('public'));
+app.use(express.static("public"));
 
 // wrap the server with socket.io , not 100% sure why we need this fully?
 var io = socket(server);

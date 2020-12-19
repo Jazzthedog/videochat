@@ -120,8 +120,8 @@ socket.on("ready", function() {
         rtcPeerConnection.ontrack = onTrackFunction;
 
         // we also responble to send media information to the other peer. Send media
-        rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream); // 0 - audio stream
-        rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream); // 1 - video stream
+        rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream); // 0 - video stream
+        rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream); // 1 - audio stream
     }
 });
 

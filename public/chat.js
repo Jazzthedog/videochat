@@ -103,11 +103,15 @@ socket.on("full", function() {
 
 socket.on("ready", function() {
     if (creator) {
-        RTCPeerconnection = new RTCPeerconnection(iceServers);
+        rtcPeerconnection = new RTCPeerconnection(iceServers);
         // this is just an interface. RTC has only empty methods we have to implement ourselves! :()
-        RTCPeerconnection.oniceCandidate = onIceCandidateFunction;
+        rtcPeerconnection.oniceCandidate = onIceCandidateFunction;
+
+        // this 'ontrack' gets triggered when you get a Video stream from other peer
+        rtcPeerConnection.ontrack = onTrackFunction;
     }
 });
+
 socket.on("candidate", function() {});
 socket.on("offer", function() {});
 socket.on("answer", function() {});
@@ -116,5 +120,13 @@ socket.on("answer", function() {});
 function onIceCandidateFunction(event) {
     if (event.candidate) {
         socket.emit("candidate", event.candidate, roomName);
+    }
+}
+
+function onTrackFunction(event) {
+    console.log("ontrack got triggered!");
+    peerVideo.srcObject = event.streams[0];
+    peerVideo.onloadedmetadata = function (e) {
+        peerVideo.play();
     }
 }

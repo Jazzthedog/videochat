@@ -8,6 +8,9 @@ var peerVideo = document.getElementById("peer-video");
 var roomInput = document.getElementById("roomName");
 var roomName = roomInput.value;
 
+// global variable to access stream in other functions
+var userStream;
+
 // need to distinguish between user who created the room and the one who 'joins' it.
 var creator = false;
 
@@ -52,6 +55,9 @@ socket.on("created", function() {
             video: { width: 1280, height: 720 },
         },
         function(stream) {
+            // set the global variable
+            userStream = stream;
+
             // any time successfull callback, hide the lobby information
             divVideoChatLobby.style = "display:none";
             userVideo.srcObject = stream;
@@ -79,6 +85,9 @@ socket.on("joined", function() {
             video: { width: 1280, height: 720 },
         },
         function(stream) {
+            // set the global variable
+            userStream = stream;
+
             // any time successfull callback, hide the lobby information
             divVideoChatLobby.style = "display:none";
             userVideo.srcObject = stream;
@@ -109,6 +118,10 @@ socket.on("ready", function() {
 
         // this 'ontrack' gets triggered when you get a Video stream from other peer
         rtcPeerConnection.ontrack = onTrackFunction;
+
+        // we also responble to send media information to the other peer. Send media
+        rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream); // 0 - audio stream
+        rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream); // 1 - video stream
     }
 });
 

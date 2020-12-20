@@ -126,6 +126,7 @@ socket.on("ready", function() {
         // emit this offer to our server, so it can broadcast it to the other side
         rtcPeerConnection.createOffer(
             function(offer) {
+                rtcPeerConnection.setLocalDescription(offer);
                 socket.emit("offer", offer, roomName);
             },
             function(error){
@@ -136,8 +137,39 @@ socket.on("ready", function() {
 });
 
 socket.on("candidate", function() {});
-socket.on("offer", function() {});
-socket.on("answer", function() {});
+
+socket.on("offer", function(offer) {
+    if (!creator) {
+        rtcPeerconnection = new RTCPeerconnection(iceServers);
+        // this is just an interface. RTC has only empty methods we have to implement ourselves! :()
+        rtcPeerconnection.oniceCandidate = onIceCandidateFunction;
+
+        // this 'ontrack' gets triggered when you get a Video stream from other peer
+        rtcPeerConnection.ontrack = onTrackFunction;
+
+        // we also responble to send media information to the other peer. Send media
+        rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream); // 0 - video stream
+        rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream); // 1 - audio stream
+
+        rtcPeerConnection.setRemoteDescription(offer);
+
+        // emit this offer to our server, so it can broadcast it to the other side
+        rtcPeerConnection.createAnswer(
+            function(answer) {
+                rtcPeerConnection.setLocalDescription(answer);
+                socket.emit("answer", answer, roomName);
+            },
+            function(error){
+                console.log(error)
+            }
+        );
+    }    
+});
+
+socket.on("answer", function(answer) {
+    console.log("chatjs: answer")
+    rtcPeerConnection.setRemoteDescription(answer);
+});
 
 // need to exchange ICE candiates
 function onIceCandidateFunction(event) {
@@ -147,7 +179,7 @@ function onIceCandidateFunction(event) {
 }
 
 function onTrackFunction(event) {
-    console.log("ontrack got triggered!");
+    console.log("chatjs: ontrack got triggered!");
     peerVideo.srcObject = event.streams[0];
     peerVideo.onloadedmetadata = function (e) {
         peerVideo.play();

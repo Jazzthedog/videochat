@@ -32,7 +32,7 @@ io.on("connection", function(socket) {
 
         var room = rooms.get(roomName);
         console.log("roomName: ", roomName);
-        
+
         // if room is undefined, we will dynamically create one.
         if (room == undefined) {
             // no room exists so create on
@@ -72,11 +72,13 @@ io.on("connection", function(socket) {
     // Server needs to broadcast offer and answer
     socket.on("offer", function(offer, roomName) {
         console.log("recieved *offer* event on server!")
+        console.log(offer);
         socket.broadcast.to(roomName).emit("offer", offer);
     });
 
     socket.on("answer", function(answer, roomName) {
         console.log("recieved *answer* event on server!")
+        console.log(answer);
         socket.broadcast.to(roomName).emit("answer", answer);
     });    
 });

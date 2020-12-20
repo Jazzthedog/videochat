@@ -3,7 +3,7 @@ const socket = require("socket.io");
 const app = express();
 
 // callback function
-var server = app.listen(4000, function() {
+let server = app.listen(4000, function() {
     console.log("Listening on port 4000");
 });
 
@@ -11,7 +11,7 @@ var server = app.listen(4000, function() {
 app.use(express.static("public"));
 
 // wrap the server with socket.io , not 100% sure why we need this fully?
-var io = socket(server);
+let io = socket(server);
 
 io.on("connection", function(socket) {
     console.log("User Connected :", socket.id);

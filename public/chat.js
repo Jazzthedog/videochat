@@ -1,26 +1,26 @@
-var socket = io.connect("http://localhost:4000");
+let socket = io.connect("http://localhost:4000");
 
-var divVideoChatLobby = document.getElementById("video-chat-lobby");
-var divVideoChat = document.getElementById("video-chat-room");
-var joinButton = document.getElementById("join");
-var userVideo = document.getElementById("user-video");
-var peerVideo = document.getElementById("peer-video");
-var roomInput = document.getElementById("roomName");
-var roomName = roomInput.value;
+let divVideoChatLobby = document.getElementById("video-chat-lobby");
+let divVideoChat = document.getElementById("video-chat-room");
+let joinButton = document.getElementById("join");
+let userVideo = document.getElementById("user-video");
+let peerVideo = document.getElementById("peer-video");
+let roomInput = document.getElementById("roomName");
+let roomName = roomInput.value;
 
 // global variable to access stream in other functions
-var userStream;
+let userStream;
 
 // need to distinguish between user who created the room and the one who 'joins' it.
-var creator = false;
+let creator = false;
 
 // variable to contain a RTCPeerconnection type (provide by WebRTC)
-var rtcPeerConnection;
+let rtcPeerConnection;
 
 // we are NOT using TURN servers for this project? why?
 // Create a dictionary with a list of free STUN servers (MANY to choose from)
 // we need client(s) to contact and get there 'public' addresses.
-var iceServers = {
+let iceServers = {
     iceServers: [
       { urls: "stun:stun.services.mozilla.com" },
       { urls: "stun:stun.l.google.com:19302" },
@@ -137,7 +137,7 @@ socket.on("ready", function() {
 
 socket.on("candidate", function(candidate) {
     // type cast the candidate to a RTCIceCandidate type
-    var icecandidate = new RTCIceCandidate(candidate);
+    let icecandidate = new RTCIceCandidate(candidate);
     rtcPeerConnection.addIceCandidate(icecandidate);
     console.log("chatjs: Ice Candidate");
 });

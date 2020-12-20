@@ -14,7 +14,7 @@ var userStream;
 // need to distinguish between user who created the room and the one who 'joins' it.
 var creator = false;
 
-// RTCPeerconnection (provide by WebRTC)
+// variable to contain a RTCPeerconnection type (provide by WebRTC)
 var rtcPeerConnection;
 
 // we are NOT using TURN servers for this project? why?
@@ -27,7 +27,6 @@ var iceServers = {
     ],
 };
 
-console.log("socket:", socket);
 
 joinButton.addEventListener("click", function() {
     if (roomInput.value == "") {
@@ -41,10 +40,10 @@ joinButton.addEventListener("click", function() {
     }
 });
 
-// 7 events to and the callback functions are needed.
+// 7 events to create and the callback functions are needed.
 socket.on("created", function() {
 
-    console.log("chatjs:created");
+    console.log("chatjs: created");
     creator = true;
 
     // navigator.mediaDevices.getUserMedia does NOT work!!!
@@ -105,7 +104,7 @@ socket.on("joined", function() {
 
 
 socket.on("full", function() {
-    console.log("chatjs:full");
+    console.log("chatjs: full");
     alert("Room is full, you can't join");
 });
 
@@ -136,7 +135,12 @@ socket.on("ready", function() {
     }
 });
 
-socket.on("candidate", function() {});
+socket.on("candidate", function(candidate) {
+    // type cast the candidate to a RTCIceCandidate type
+    var icecandidate = new RTCIceCandidate(candidate);
+    rtcPeerConnection.addIceCandidate(icecandidate);
+    console.log("chatjs: Ice Candidate");
+});
 
 socket.on("offer", function(offer) {
     if (!creator) {

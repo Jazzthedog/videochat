@@ -122,6 +122,16 @@ socket.on("ready", function() {
         // we also responble to send media information to the other peer. Send media
         rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream); // 0 - video stream
         rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream); // 1 - audio stream
+
+        // emit this offer to our server, so it can broadcast it to the other side
+        rtcPeerConnection.createOffer(
+            function(offer) {
+                socket.emit("offer", offer, roomName);
+            },
+            function(error){
+                console.log(error)
+            }
+        );
     }
 });
 

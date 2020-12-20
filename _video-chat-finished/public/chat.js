@@ -29,7 +29,7 @@ socket.on("created", function () {
   creator = true;
   navigator.getUserMedia(
     {
-      audio: true,
+      audio: false,
       video: { width: 1280, height: 720 },
     },
     function (stream) {
@@ -51,7 +51,7 @@ socket.on("joined", function () {
 
   navigator.getUserMedia(
     {
-      audio: true,
+      audio: false,
       video: { width: 1280, height: 720 },
     },
     function (stream) {

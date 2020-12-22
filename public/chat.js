@@ -156,7 +156,7 @@ socket.on("ready", function() {
         console.log("chatjs: ready");
         rtcPeerConnection = new RTCPeerconnection(iceServers);
         // this is just an interface. RTC has only empty methods we have to implement ourselves! :()
-        rtcPeerConnection.oniceCandidate = onIceCandidateFunction;
+        rtcPeerConnection.onicecandidate = onIceCandidateFunction;
 
         // this 'ontrack' gets triggered when you get a Video stream from other peer
         rtcPeerConnection.ontrack = onTrackFunction;
@@ -192,7 +192,7 @@ socket.on("offer", function(offer) {
         console.log("chatjs: offer");
         rtcPeerconnection = new RTCPeerconnection(iceServers);
         // this is just an interface. RTC has only empty methods we have to implement ourselves! :()
-        rtcPeerconnection.oniceCandidate = onIceCandidateFunction;
+        rtcPeerconnection.onicecandidate = onIceCandidateFunction;
 
         // this 'ontrack' gets triggered when you get a Video stream from other peer
         rtcPeerConnection.ontrack = onTrackFunction;

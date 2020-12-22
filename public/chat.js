@@ -6,6 +6,17 @@ let joinButton = document.getElementById("join");
 let userVideo = document.getElementById("user-video");
 let peerVideo = document.getElementById("peer-video");
 let roomInput = document.getElementById("roomName");
+
+let divButtonGroup = document.getElementById("btn-group");
+let muteButton = document.getElementById("muteButton");
+let hideCameraButton = document.getElementById("hideCameraButton");
+let leaveRoomButton = document.getElementById("leaveRoomButton");
+
+// mute and hide are toggles
+// 2 variable to hold these states
+let muteFlag = false;
+let hideCameraFlag = false;
+
 let roomName = roomInput.value;
 
 // global variable to access stream in other functions
@@ -40,6 +51,34 @@ joinButton.addEventListener("click", function() {
     }
 });
 
+muteButton.addEventListener("click", function() {
+    console.log("chat.js: mute");
+    muteFlag = !muteFlag;
+    if (muteFlag) {
+        userStream.getTracks()[0].enabled = false; // disable audio stream
+        muteButton.textContent = "Unmute";
+    } else {
+        userStream.getTracks()[1].enabled = true; // enable audio stream
+        muteButton.textContent = "Mute";
+        //muteFlag = false;
+    }
+});
+
+hideCameraButton.addEventListener("click", function() {
+    console.log("chat.js: hide camera");
+    hideCameraFlag = !hideCameraFlag;
+    if (hideCameraFlag) {
+        userStream.getTracks()[1].enabled = false;  // disable the camera
+        hideCameraButton.textContent = "Show Camera";
+    } else {
+        userStream.getTracks()[1].enabled = true;
+        hideCameraButton.textContent = "Hide Camera";
+        //hideCameraFlag = false;
+    }
+});
+
+
+
 // 7 events to create and the callback functions are needed.
 socket.on("created", function() {
 
@@ -59,6 +98,7 @@ socket.on("created", function() {
 
             // any time successfull callback, hide the lobby information
             divVideoChatLobby.style = "display:none";
+            divButtonGroup.sytle = "display:flex";
             userVideo.srcObject = stream;
             userVideo.onloadedmetadata = function(e) {
                 userVideo.play();
@@ -73,7 +113,7 @@ socket.on("created", function() {
 
 socket.on("joined", function() {
 
-    console.log("chatjs:joined");
+    console.log("chatjs: joined");
     creator = false;
 
     // navigator.mediaDevices.getUserMedia does NOT work!!!
@@ -89,6 +129,7 @@ socket.on("joined", function() {
 
             // any time successfull callback, hide the lobby information
             divVideoChatLobby.style = "display:none";
+            divButtonGroup.sytle = "display:flex";
             userVideo.srcObject = stream;
             userVideo.onloadedmetadata = function(e) {
                 userVideo.play();
@@ -110,17 +151,21 @@ socket.on("full", function() {
 
 
 socket.on("ready", function() {
+
     if (creator) {
-        rtcPeerconnection = new RTCPeerconnection(iceServers);
+        console.log("chatjs: ready");
+        rtcPeerConnection = new RTCPeerconnection(iceServers);
         // this is just an interface. RTC has only empty methods we have to implement ourselves! :()
-        rtcPeerconnection.oniceCandidate = onIceCandidateFunction;
+        rtcPeerConnection.oniceCandidate = onIceCandidateFunction;
 
         // this 'ontrack' gets triggered when you get a Video stream from other peer
         rtcPeerConnection.ontrack = onTrackFunction;
 
+        console.log(userStream.getTracks());
+
         // we also responble to send media information to the other peer. Send media
-        rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream); // 0 - video stream
-        rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream); // 1 - audio stream
+        rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream); // 0 - audio stream
+        rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream); // 1 - video stream
 
         // emit this offer to our server, so it can broadcast it to the other side
         rtcPeerConnection.createOffer(
@@ -144,6 +189,7 @@ socket.on("candidate", function(candidate) {
 
 socket.on("offer", function(offer) {
     if (!creator) {
+        console.log("chatjs: offer");
         rtcPeerconnection = new RTCPeerconnection(iceServers);
         // this is just an interface. RTC has only empty methods we have to implement ourselves! :()
         rtcPeerconnection.oniceCandidate = onIceCandidateFunction;
@@ -171,13 +217,14 @@ socket.on("offer", function(offer) {
 });
 
 socket.on("answer", function(answer) {
-    console.log("chatjs: answer")
+    console.log("chatjs: answer");
     rtcPeerConnection.setRemoteDescription(answer);
 });
 
 // need to exchange ICE candiates
 function onIceCandidateFunction(event) {
     if (event.candidate) {
+        console.log("chatjs: onIceCandidateFunction");
         socket.emit("candidate", event.candidate, roomName);
     }
 }

@@ -77,14 +77,14 @@ input {
   padding: 20px;
 }
 
-.btn-group {
+#btn-group {
   display: flex;
   justify-content: center;
 }
 
 .btn-group button {
-  background-color: #010e01; /* Green background */
-  border: 1px solid whitegreen; /* Green border */
+  background-color: #141414; /* Green background */
+  border: 1px solid white; /* Green border */
   color: white; /* White text */
   padding: 10px 24px; /* Some padding */
   cursor: pointer; /* Pointer/hand icon */
@@ -104,5 +104,5 @@ input {
 
 /* Add a background color on hover */
 .btn-group button:hover {
-  background-color: black;
+  background-color: #000000;
 }

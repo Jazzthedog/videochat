@@ -23,14 +23,13 @@ io.on("connection", function(socket) {
         // If the room already has 2 people in it, let user not join.
 
         // get a map or list of existing websocket connections
-        var rooms = io.sockets.adapter.rooms;
+        let rooms = io.sockets.adapter.rooms;
         console.log("rooms:", rooms);
 
         //check to see if room already exists
         //var room = io.sockets.adapter.rooms.get(roomName);
 
-
-        var room = rooms.get(roomName);
+        let room = rooms.get(roomName);
         console.log("roomName: ", roomName);
 
         // if room is undefined, we will dynamically create one.
@@ -58,27 +57,27 @@ io.on("connection", function(socket) {
     // everything our server gets a 'ready' event, it broadcast that event to the 
     // other peers in the room
     socket.on("ready", function(roomName) {
-        console.log("recieved *ready* events on server!")
+        console.log("ready event on server!")
         socket.broadcast.to(roomName).emit("ready");
     });
 
     // we also have to send ICE candidate to get the 'public' address.
     socket.on("candidate", function(candidate, roomName) {
-        console.log("recieved *candidate* event on server!")
+        console.log("candidate event on server!")
         socket.broadcast.to(roomName).emit("candidate", candidate);
     });
 
     // Offer and Answer - STP
     // Server needs to broadcast offer and answer
     socket.on("offer", function(offer, roomName) {
-        console.log("recieved *offer* event on server!")
-        console.log(offer);
+        console.log("offer event on server!")
+        //console.log(offer);
         socket.broadcast.to(roomName).emit("offer", offer);
     });
 
     socket.on("answer", function(answer, roomName) {
-        console.log("recieved *answer* event on server!")
-        console.log(answer);
+        console.log("answer event on server!")
+        //console.log(answer);
         socket.broadcast.to(roomName).emit("answer", answer);
     });    
 });

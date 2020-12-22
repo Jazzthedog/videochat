@@ -190,9 +190,9 @@ socket.on("candidate", function(candidate) {
 socket.on("offer", function(offer) {
     if (!creator) {
         console.log("chatjs: offer");
-        rtcPeerconnection = new RTCPeerconnection(iceServers);
+        rtcPeerConnection = new RTCPeerconnection(iceServers);
         // this is just an interface. RTC has only empty methods we have to implement ourselves! :()
-        rtcPeerconnection.onicecandidate = onIceCandidateFunction;
+        rtcPeerConnection.onicecandidate = onIceCandidateFunction;
 
         // this 'ontrack' gets triggered when you get a Video stream from other peer
         rtcPeerConnection.ontrack = onTrackFunction;

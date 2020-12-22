@@ -51,7 +51,7 @@ socket.on("created", function() {
     navigator.getUserMedia(
         {
             audio: false, // turn off audio for now as i get feedback??
-            video: { width: 1280, height: 720 },
+            video: { width: 500, height: 500 },
         },
         function(stream) {
             // set the global variable
@@ -81,7 +81,7 @@ socket.on("joined", function() {
     navigator.getUserMedia(
         {
             audio: false, // turn off audio for now as i get feedback??
-            video: { width: 1280, height: 720 },
+            video: { width: 500, height: 500 },
         },
         function(stream) {
             // set the global variable

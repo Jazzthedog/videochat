@@ -51,6 +51,7 @@ joinButton.addEventListener("click", function() {
     }
 });
 
+
 muteButton.addEventListener("click", function() {
     console.log("chat.js: mute");
     muteFlag = !muteFlag;
@@ -219,6 +220,55 @@ socket.on("offer", function(offer) {
 socket.on("answer", function(answer) {
     console.log("chatjs: answer");
     rtcPeerConnection.setRemoteDescription(answer);
+});
+
+
+leaveRoomButton.addEventListener("click", function() {
+    // let the server know this peer wants to leave the room
+    console.log("chat.js: leave");
+    socket.emit("leave", roomName);
+
+    // clean up the UI a bit as we want to remove elements from showing up
+    divVideoChatLobby.style = "display:block";
+    divButtonGroup.sytle = "display:none";
+
+    if (userVideo.srcObject) {
+        // get rid of user-video and peer-video
+        userVideo.srcObject.getTracks()[0].stop();
+        userVideo.srcObject.getTracks()[1].stop();
+    }
+    //userVideo.srcObject.getTracks().forEach( (track) => track.stop());
+
+    if (peerVideo.srcObject) {
+        peerVideo.srcObject.getTracks()[0].stop();
+        peerVideo.srcObject.getTracks()[1].stop();
+    }
+
+    // close the connection we established previously
+    if (rtcPeerConnection) {
+        rtcPeerConnection.ontrack = null;
+        rtcPeerConnection.onicecandidate = null;
+        rtcPeerConnection.close();
+        rtcPeerConnection = null;
+    }
+});
+
+// leave callback function executes on the side of the person leaving the room
+socket.on("leave", function() {
+    // close the connection we established previously
+    if (rtcPeerConnection) {
+        rtcPeerConnection.ontrack = null;
+        rtcPeerConnection.onicecandidate = null;
+        rtcPeerConnection.close();
+        rtcPeerConnection = null;
+    }  
+
+    if (peerVideo.srcObject) {
+        peerVideo.srcObject.getTracks()[0].stop();
+        peerVideo.srcObject.getTracks()[1].stop();
+    }      
+
+    // leave user-video alone as the user still should see his own video
 });
 
 // need to exchange ICE candiates

@@ -37,7 +37,7 @@ io.on("connection", function(socket) {
             // no room exists so create on
             socket.join(roomName);
             console.log("Room Created");
-            console.log("room:", io.sockets.adapter.rooms.get(roomName) );
+            //console.log("room:", io.sockets.adapter.rooms.get(roomName) );
 
             // let the client know we created a room
             socket.emit("created");
@@ -80,6 +80,15 @@ io.on("connection", function(socket) {
         //console.log(answer);
         socket.broadcast.to(roomName).emit("answer", answer);
     });    
+
+    socket.on("leave", function(roomName) {
+        console.log("leave event on server!");
+        socket.leave(roomName);
+
+        // let the other peer know you also left the room.
+        // server needs to broadcast to other peer
+        socket.broadcast.to(roomName).emit("leave");
+    });
 });
 
 

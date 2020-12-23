@@ -81,68 +81,61 @@ hideCameraButton.addEventListener("click", function() {
 
 
 // 7 events to create and the callback functions are needed.
-socket.on("created", function() {
-
+socket.on("created", function () {
     console.log("chatjs: created");
     creator = true;
-
-    // navigator.mediaDevices.getUserMedia does NOT work!!!
+  
     // navigator.getUserMedia() is a legacy method.
-    navigator.getUserMedia(
-        {
-            audio: false, // turn off audio for now as i get feedback??
-            video: { width: 500, height: 500 },
-        },
-        function(stream) {
-            // set the global variable
-            userStream = stream;
+    navigator.mediaDevices
+      .getUserMedia({
+        audio: true,
+        video: { width: 500, height: 500 },
+      })
+      .then(function (stream) {
+        /* use the stream */
+        userStream = stream;
 
-            // any time successfull callback, hide the lobby information
-            divVideoChatLobby.style = "display:none";
-            divButtonGroup.sytle = "display:flex";
-            userVideo.srcObject = stream;
-            userVideo.onloadedmetadata = function(e) {
-                userVideo.play();
-            };
-        },
-        function() {
-            alert("Could not access User Media");
-        }
-    );
+        // any time successfull callback, hide the lobby information
+        divVideoChatLobby.style = "display:none";
+        divButtonGroup.style = "display:flex";
+        userVideo.srcObject = stream;
+        userVideo.onloadedmetadata = function (e) {
+          userVideo.play();
+        };
+      })
+      .catch(function (err) {
+        /* handle the error */
+        alert("Couldn't Access User Media");
+      });
+  });
 
-});
 
-socket.on("joined", function() {
-
-    console.log("chatjs: joined");
+// Triggered when a room is succesfully joined.
+socket.on("joined", function () {
+    console.log("chat.js: joined");
     creator = false;
-
-    // navigator.mediaDevices.getUserMedia does NOT work!!!
-    // navigator.getUserMedia() is a legacy method.
-    navigator.getUserMedia(
-        {
-            audio: false, // turn off audio for now as i get feedback??
-            video: { width: 500, height: 500 },
-        },
-        function(stream) {
-            // set the global variable
-            userStream = stream;
-
-            // any time successfull callback, hide the lobby information
-            divVideoChatLobby.style = "display:none";
-            divButtonGroup.sytle = "display:flex";
-            userVideo.srcObject = stream;
-            userVideo.onloadedmetadata = function(e) {
-                userVideo.play();
-            };
-            // after entering the room, we trigger the 'ready' event.
-            socket.emit("ready", roomName);
-        },
-        function() {
-            alert("Could not access User Media");
-        }
-    );
-});
+  
+    navigator.mediaDevices
+      .getUserMedia({
+        audio: true,
+        video: { width: 500, height: 500 },
+      })
+      .then(function (stream) {
+        /* use the stream */
+        userStream = stream;
+        divVideoChatLobby.style = "display:none";
+        divButtonGroup.style = "display:flex";
+        userVideo.srcObject = stream;
+        userVideo.onloadedmetadata = function (e) {
+          userVideo.play();
+        };
+        socket.emit("ready", roomName);
+      })
+      .catch(function (err) {
+        /* handle the error */
+        alert("Couldn't Access User Media");
+      });
+  });
 
 
 socket.on("full", function() {

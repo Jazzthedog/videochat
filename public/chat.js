@@ -6,6 +6,16 @@ let joinButton = document.getElementById("join");
 let userVideo = document.getElementById("user-video");
 let peerVideo = document.getElementById("peer-video");
 let roomInput = document.getElementById("roomName");
+let roomName = roomInput.value;
+
+// need to distinguish between user who created the room and the one who 'joins' it.
+let creator = false;
+
+// variable to contain a RTCPeerconnection type (provide by WebRTC)
+let rtcPeerConnection;
+
+// global variable to access stream in other functions
+let userStream;
 
 let divButtonGroup = document.getElementById("btn-group");
 let muteButton = document.getElementById("muteButton");
@@ -17,16 +27,6 @@ let leaveRoomButton = document.getElementById("leaveRoomButton");
 let muteFlag = false;
 let hideCameraFlag = false;
 
-let roomName = roomInput.value;
-
-// global variable to access stream in other functions
-let userStream;
-
-// need to distinguish between user who created the room and the one who 'joins' it.
-let creator = false;
-
-// variable to contain a RTCPeerconnection type (provide by WebRTC)
-let rtcPeerConnection;
 
 // we are NOT using TURN servers for this project? why?
 // Create a dictionary with a list of free STUN servers (MANY to choose from)
@@ -38,19 +38,16 @@ let iceServers = {
     ],
 };
 
-
 joinButton.addEventListener("click", function() {
     if (roomInput.value == "") {
         alert("Please enter a room name");
     }
     else {
-
         // we need to let the server know that a user is trying to enter our room. 
         // Raise an 'event' and pass the roomname with it.
         socket.emit("join", roomName);
     }
 });
-
 
 muteButton.addEventListener("click", function() {
     console.log("chat.js: mute");
@@ -78,17 +75,15 @@ hideCameraButton.addEventListener("click", function() {
     }
 });
 
-
-
 // 7 events to create and the callback functions are needed.
 socket.on("created", function () {
-    console.log("chatjs: created");
+    console.log("chat.js: created");
     creator = true;
   
     // navigator.getUserMedia() is a legacy method.
     navigator.mediaDevices
       .getUserMedia({
-        audio: true,
+        audio: false,
         video: { width: 500, height: 500 },
       })
       .then(function (stream) {
@@ -107,7 +102,7 @@ socket.on("created", function () {
         /* handle the error */
         alert("Couldn't Access User Media");
       });
-  });
+});
 
 
 // Triggered when a room is succesfully joined.
@@ -117,7 +112,7 @@ socket.on("joined", function () {
   
     navigator.mediaDevices
       .getUserMedia({
-        audio: true,
+        audio: false,
         video: { width: 500, height: 500 },
       })
       .then(function (stream) {
@@ -135,27 +130,25 @@ socket.on("joined", function () {
         /* handle the error */
         alert("Couldn't Access User Media");
       });
-  });
-
+});
 
 socket.on("full", function() {
     console.log("chatjs: full");
     alert("Room is full, you can't join");
 });
 
-
 socket.on("ready", function() {
-
+    console.log("chatjs: ready function");
     if (creator) {
-        console.log("chatjs: ready");
-        rtcPeerConnection = new RTCPeerconnection(iceServers);
+        console.log("chatjs: setting up a new RTCPeerConnection");
+        rtcPeerConnection = new RTCPeerConnection(iceServers);
         // this is just an interface. RTC has only empty methods we have to implement ourselves! :()
-        rtcPeerConnection.onicecandidate = onIceCandidateFunction;
+        rtcPeerConnection.onicecandidate = OnIceCandidateFunction;
 
         // this 'ontrack' gets triggered when you get a Video stream from other peer
-        rtcPeerConnection.ontrack = onTrackFunction;
+        rtcPeerConnection.ontrack = OnTrackFunction;
 
-        console.log(userStream.getTracks());
+        //console.log(userStream.getTracks());
 
         // we also responble to send media information to the other peer. Send media
         rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream); // 0 - audio stream
@@ -186,10 +179,10 @@ socket.on("offer", function(offer) {
         console.log("chatjs: offer");
         rtcPeerConnection = new RTCPeerconnection(iceServers);
         // this is just an interface. RTC has only empty methods we have to implement ourselves! :()
-        rtcPeerConnection.onicecandidate = onIceCandidateFunction;
+        rtcPeerConnection.onicecandidate = OnIceCandidateFunction;
 
         // this 'ontrack' gets triggered when you get a Video stream from other peer
-        rtcPeerConnection.ontrack = onTrackFunction;
+        rtcPeerConnection.ontrack = OnTrackFunction;
 
         // we also responble to send media information to the other peer. Send media
         rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream); // 0 - video stream
@@ -265,14 +258,14 @@ socket.on("leave", function() {
 });
 
 // need to exchange ICE candiates
-function onIceCandidateFunction(event) {
+function OnIceCandidateFunction(event) {
     if (event.candidate) {
         console.log("chatjs: onIceCandidateFunction");
         socket.emit("candidate", event.candidate, roomName);
     }
 }
 
-function onTrackFunction(event) {
+function OnTrackFunction(event) {
     console.log("chatjs: ontrack got triggered!");
     peerVideo.srcObject = event.streams[0];
     peerVideo.onloadedmetadata = function (e) {

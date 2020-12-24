@@ -34,21 +34,26 @@ io.on("connection", function(socket) {
 
         // if room is undefined, we will dynamically create one.
         if (room == undefined) {
-            // no room exists so create on
-            socket.join(roomName);
+            // no room exists so create one dynamically
             console.log("Room Created");
+            socket.join(roomName);
+
             //console.log("room:", io.sockets.adapter.rooms.get(roomName) );
 
-            // let the client know we created a room
+            // let the client side know we created a room with "created" event
             socket.emit("created");
         }
         else if (room.size == 1) {
             socket.join(roomName);
             console.log("Room Joined");
+
+            // let client side know we "joined" a room.
             socket.emit("joined");
         }
         else {
             console.log("Room full (2 people max) for now");
+
+            // let client side know the room is full
             socket.emit("full");
         }
     });

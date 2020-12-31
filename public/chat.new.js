@@ -8,13 +8,8 @@ let peerVideo = document.getElementById("peer-video");
 let roomInput = document.getElementById("roomName");
 let roomName = roomInput.value;
 
-// need to distinguish between user who created the room and the one who 'joins' it.
 let creator = false;
-
-// variable to contain a RTCPeerconnection type (provide by WebRTC)
 let rtcPeerConnection;
-
-// global variable to access stream in other functions
 let userStream;
 
 let divButtonGroup = document.getElementById("btn-group");
@@ -22,35 +17,26 @@ let muteButton = document.getElementById("muteButton");
 let hideCameraButton = document.getElementById("hideCameraButton");
 let leaveRoomButton = document.getElementById("leaveRoomButton");
 
-// mute and hide are toggles
-// 2 variable to hold these states
 let muteFlag = false;
 let hideCameraFlag = false;
 
-
-// we are NOT using TURN servers for this project? why?
-// Create a dictionary with a list of free STUN servers (MANY to choose from)
-// we need client(s) to contact and get there 'public' addresses.
+// Contains the stun server URL we will be using.
 let iceServers = {
-    iceServers: [
-      { urls: "stun:stun.services.mozilla.com" },
-      { urls: "stun:stun.l.google.com:19302" },
-    ],
+  iceServers: [
+    { urls: "stun:stun.services.mozilla.com" },
+    { urls: "stun:stun.l.google.com:19302" },
+  ],
 };
 
 joinButton.addEventListener("click", function() {
     if (roomInput.value == "") {
         alert("Please enter a room name");
-    }
-    else {
-        // we need to let the server know that a user is trying to enter our room. 
-        // Raise an 'event' and pass the roomname with it.
+    } else {
         socket.emit("join", roomName);
     }
 });
 
 muteButton.addEventListener("click", function() {
-    console.log("chat.js: mute");
     muteFlag = !muteFlag;
     if (muteFlag) {
         userStream.getTracks()[0].enabled = false; // disable audio stream
@@ -58,12 +44,10 @@ muteButton.addEventListener("click", function() {
     } else {
         userStream.getTracks()[0].enabled = true; // enable audio stream
         muteButton.textContent = "Mute";
-        //muteFlag = false;
     }
 });
 
 hideCameraButton.addEventListener("click", function() {
-    console.log("chat.js: hide camera");
     hideCameraFlag = !hideCameraFlag;
     if (hideCameraFlag) {
         userStream.getTracks()[1].enabled = false;  // disable the camera
@@ -71,26 +55,44 @@ hideCameraButton.addEventListener("click", function() {
     } else {
         userStream.getTracks()[1].enabled = true;
         hideCameraButton.textContent = "Hide Camera";
-        //hideCameraFlag = false;
     }
 });
 
-// 7 events to create and the callback functions are needed.
+leaveRoomButton.addEventListener("click", function() {
+    socket.emit("leave", roomName);
+
+    divVideoChatLobby.style = "display:block";
+    divButtonGroup.style = "display:none";
+
+    if (userVideo.srcObject) {
+        userVideo.srcObject.getTracks()[0].stop();
+        userVideo.srcObject.getTracks()[1].stop();
+    }
+    if (peerVideo.srcObject) {
+        peerVideo.srcObject.getTracks()[0].stop();
+        peerVideo.srcObject.getTracks()[1].stop();
+    }
+
+    // close the connection we established previously
+    if (rtcPeerConnection) {
+        rtcPeerConnection.ontrack = null;
+        rtcPeerConnection.onicecandidate = null;
+        rtcPeerConnection.close();
+        rtcPeerConnection = null;
+    }
+});
+
 socket.on("created", function () {
-    console.log("chat.js: created");
     creator = true;
   
-    // navigator.getUserMedia() is a legacy method.
     navigator.mediaDevices
       .getUserMedia({
-        audio: false,
+        audio: true,
         video: { width: 500, height: 500 },
       })
       .then(function (stream) {
         /* use the stream */
         userStream = stream;
-
-        // any time successfull callback, hide the lobby information
         divVideoChatLobby.style = "display:none";
         divButtonGroup.style = "display:flex";
         userVideo.srcObject = stream;
@@ -104,15 +106,12 @@ socket.on("created", function () {
       });
 });
 
-
 // Triggered when a room is succesfully joined.
 socket.on("joined", function () {
-    console.log("chat.js: joined");
     creator = false;
-  
     navigator.mediaDevices
       .getUserMedia({
-        audio: false,
+        audio: true,
         video: { width: 500, height: 500 },
       })
       .then(function (stream) {
@@ -133,28 +132,16 @@ socket.on("joined", function () {
 });
 
 socket.on("full", function() {
-    console.log("chatjs: full");
     alert("Room is full, you can't join");
 });
 
 socket.on("ready", function() {
-    console.log("chatjs: ready function");
     if (creator) {
-        console.log("chatjs: setting up a new RTCPeerConnection");
         rtcPeerConnection = new RTCPeerConnection(iceServers);
-        // this is just an interface. RTC has only empty methods we have to implement ourselves! :()
         rtcPeerConnection.onicecandidate = OnIceCandidateFunction;
-
-        // this 'ontrack' gets triggered when you get a Video stream from other peer
         rtcPeerConnection.ontrack = OnTrackFunction;
-
-        //console.log(userStream.getTracks());
-
-        // we also responble to send media information to the other peer. Send media
         rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream); // 0 - audio stream
         rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream); // 1 - video stream
-
-        // emit this offer to our server, so it can broadcast it to the other side
         rtcPeerConnection.createOffer(
             function(offer) {
                 rtcPeerConnection.setLocalDescription(offer);
@@ -168,29 +155,18 @@ socket.on("ready", function() {
 });
 
 socket.on("candidate", function(candidate) {
-    // type cast the candidate to a RTCIceCandidate type
     let icecandidate = new RTCIceCandidate(candidate);
     rtcPeerConnection.addIceCandidate(icecandidate);
-    console.log("chatjs: Ice Candidate");
 });
 
 socket.on("offer", function(offer) {
     if (!creator) {
-        console.log("chatjs: offer");
         rtcPeerConnection = new RTCPeerConnection(iceServers);
-        // this is just an interface. RTC has only empty methods we have to implement ourselves! :()
         rtcPeerConnection.onicecandidate = OnIceCandidateFunction;
-
-        // this 'ontrack' gets triggered when you get a Video stream from other peer
         rtcPeerConnection.ontrack = OnTrackFunction;
-
-        // we also responble to send media information to the other peer. Send media
         rtcPeerConnection.addTrack(userStream.getTracks()[0], userStream); // 0 - video stream
         rtcPeerConnection.addTrack(userStream.getTracks()[1], userStream); // 1 - audio stream
-
         rtcPeerConnection.setRemoteDescription(offer);
-
-        // emit this offer to our server, so it can broadcast it to the other side
         rtcPeerConnection.createAnswer(
             function(answer) {
                 rtcPeerConnection.setLocalDescription(answer);
@@ -204,71 +180,36 @@ socket.on("offer", function(offer) {
 });
 
 socket.on("answer", function(answer) {
-    console.log("chatjs: answer");
     rtcPeerConnection.setRemoteDescription(answer);
 });
 
+socket.on("leave", function () {
+  creator = true; //This person is now the creator because they are the only person in the room.
+  if (peerVideo.srcObject) {
+    peerVideo.srcObject.getTracks()[0].stop(); //Stops receiving audio track of Peer.
+    peerVideo.srcObject.getTracks()[1].stop(); //Stops receiving video track of Peer.
+  }
 
-leaveRoomButton.addEventListener("click", function() {
-    // let the server know this peer wants to leave the room
-    console.log("chat.js: leave");
-    socket.emit("leave", roomName);
+  //Safely closes the existing connection established with the peer who left.
 
-    // clean up the UI a bit as we want to remove elements from showing up
-    divVideoChatLobby.style = "display:block";
-    divButtonGroup.style = "display:none";
-
-    if (userVideo.srcObject) {
-        // get rid of user-video and peer-video
-        userVideo.srcObject.getTracks()[0].stop();
-        userVideo.srcObject.getTracks()[1].stop();
-    }
-    //userVideo.srcObject.getTracks().forEach( (track) => track.stop());
-
-    if (peerVideo.srcObject) {
-        peerVideo.srcObject.getTracks()[0].stop();
-        peerVideo.srcObject.getTracks()[1].stop();
-    }
-
-    // close the connection we established previously
-    if (rtcPeerConnection) {
-        rtcPeerConnection.ontrack = null;
-        rtcPeerConnection.onicecandidate = null;
-        rtcPeerConnection.close();
-        rtcPeerConnection = null;
-    }
+  if (rtcPeerConnection) {
+    rtcPeerConnection.ontrack = null;
+    rtcPeerConnection.onicecandidate = null;
+    rtcPeerConnection.close();
+    rtcPeerConnection = null;
+  }
 });
 
-// leave callback function executes on the side of the person leaving the room
-socket.on("leave", function() {
-    // close the connection we established previously
-    if (rtcPeerConnection) {
-        rtcPeerConnection.ontrack = null;
-        rtcPeerConnection.onicecandidate = null;
-        rtcPeerConnection.close();
-        rtcPeerConnection = null;
-    }  
-
-    if (peerVideo.srcObject) {
-        peerVideo.srcObject.getTracks()[0].stop();
-        peerVideo.srcObject.getTracks()[1].stop();
-    }      
-
-    // leave user-video alone as the user still should see his own video
-});
-
-// need to exchange ICE candiates
 function OnIceCandidateFunction(event) {
-    if (event.candidate) {
-        console.log("chatjs: onIceCandidateFunction");
-        socket.emit("candidate", event.candidate, roomName);
-    }
+  console.log("Candidate");
+  if (event.candidate) {
+    socket.emit("candidate", event.candidate, roomName);
+  }
 }
 
 function OnTrackFunction(event) {
-    console.log("chatjs: ontrack got triggered!");
-    peerVideo.srcObject = event.streams[0];
-    peerVideo.onloadedmetadata = function (e) {
-        peerVideo.play();
-    }
+  peerVideo.srcObject = event.streams[0];
+  peerVideo.onloadedmetadata = function (e) {
+    peerVideo.play();
+  };
 }

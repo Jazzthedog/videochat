@@ -6,7 +6,7 @@ let joinButton = document.getElementById("join");
 let userVideo = document.getElementById("user-video");
 let peerVideo = document.getElementById("peer-video");
 let roomInput = document.getElementById("roomName");
-let roomName = roomInput.value;
+let roomName;
 
 // need to distinguish between user who created the room and the one who 'joins' it.
 let creator = false;
@@ -44,6 +44,7 @@ joinButton.addEventListener("click", function() {
     if (roomInput.value == "") {
         alert("Please enter a room name");
     } else {
+        roomName = roomInput.value;
         socket.emit("join", roomName);
     }
 });

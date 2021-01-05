@@ -8,8 +8,13 @@ let peerVideo = document.getElementById("peer-video");
 let roomInput = document.getElementById("roomName");
 let roomName = roomInput.value;
 
+// need to distinguish between user who created the room and the one who 'joins' it.
 let creator = false;
+
+// variable to contain a RTCPeerconnection type (provide by WebRTC)
 let rtcPeerConnection;
+
+// global variable to access stream in other functions
 let userStream;
 
 let divButtonGroup = document.getElementById("btn-group");
@@ -17,10 +22,15 @@ let muteButton = document.getElementById("muteButton");
 let hideCameraButton = document.getElementById("hideCameraButton");
 let leaveRoomButton = document.getElementById("leaveRoomButton");
 
+// mute and hide are toggles
+// 2 variable to hold these states
 let muteFlag = false;
 let hideCameraFlag = false;
 
 // Contains the stun server URL we will be using.
+// we are NOT using TURN servers for this project? why?
+// Create a dictionary with a list of free STUN servers (MANY to choose from)
+// we need client(s) to contact and get there 'public' addresses.
 let iceServers = {
   iceServers: [
     { urls: "stun:stun.services.mozilla.com" },
@@ -28,7 +38,9 @@ let iceServers = {
   ],
 };
 
+
 joinButton.addEventListener("click", function() {
+    console.log("chat.js: join");
     if (roomInput.value == "") {
         alert("Please enter a room name");
     } else {
@@ -37,6 +49,7 @@ joinButton.addEventListener("click", function() {
 });
 
 muteButton.addEventListener("click", function() {
+    console.log("chat.js: mute");
     muteFlag = !muteFlag;
     if (muteFlag) {
         userStream.getTracks()[0].enabled = false; // disable audio stream
@@ -48,6 +61,7 @@ muteButton.addEventListener("click", function() {
 });
 
 hideCameraButton.addEventListener("click", function() {
+    console.log("chat.js: hide camera");
     hideCameraFlag = !hideCameraFlag;
     if (hideCameraFlag) {
         userStream.getTracks()[1].enabled = false;  // disable the camera
@@ -59,6 +73,7 @@ hideCameraButton.addEventListener("click", function() {
 });
 
 leaveRoomButton.addEventListener("click", function() {
+    console.log("chat.js: leave");
     socket.emit("leave", roomName);
 
     divVideoChatLobby.style = "display:block";
@@ -83,6 +98,7 @@ leaveRoomButton.addEventListener("click", function() {
 });
 
 socket.on("created", function () {
+    console.log("chat.js: created");
     creator = true;
   
     navigator.mediaDevices
@@ -108,6 +124,7 @@ socket.on("created", function () {
 
 // Triggered when a room is succesfully joined.
 socket.on("joined", function () {
+    console.log("chat.js: joined");
     creator = false;
     navigator.mediaDevices
       .getUserMedia({
@@ -132,10 +149,12 @@ socket.on("joined", function () {
 });
 
 socket.on("full", function() {
+    console.log("chat.js: full");
     alert("Room is full, you can't join");
 });
 
 socket.on("ready", function() {
+    console.log("chat.js: ready");
     if (creator) {
         rtcPeerConnection = new RTCPeerConnection(iceServers);
         rtcPeerConnection.onicecandidate = OnIceCandidateFunction;
@@ -155,11 +174,13 @@ socket.on("ready", function() {
 });
 
 socket.on("candidate", function(candidate) {
+    console.log("chat.js: candidate");
     let icecandidate = new RTCIceCandidate(candidate);
     rtcPeerConnection.addIceCandidate(icecandidate);
 });
 
 socket.on("offer", function(offer) {
+    console.log("chat.js: offer");
     if (!creator) {
         rtcPeerConnection = new RTCPeerConnection(iceServers);
         rtcPeerConnection.onicecandidate = OnIceCandidateFunction;
@@ -180,10 +201,12 @@ socket.on("offer", function(offer) {
 });
 
 socket.on("answer", function(answer) {
+    console.log("chat.js: answer");
     rtcPeerConnection.setRemoteDescription(answer);
 });
 
 socket.on("leave", function () {
+  console.log("chat.js: leave");
   creator = true; //This person is now the creator because they are the only person in the room.
   if (peerVideo.srcObject) {
     peerVideo.srcObject.getTracks()[0].stop(); //Stops receiving audio track of Peer.
@@ -201,13 +224,14 @@ socket.on("leave", function () {
 });
 
 function OnIceCandidateFunction(event) {
-  console.log("Candidate");
+  console.log("OnIceCandidateFunction");
   if (event.candidate) {
     socket.emit("candidate", event.candidate, roomName);
   }
 }
 
 function OnTrackFunction(event) {
+  console.log("OnTrackFunction");
   peerVideo.srcObject = event.streams[0];
   peerVideo.onloadedmetadata = function (e) {
     peerVideo.play();

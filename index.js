@@ -3,7 +3,11 @@ const socket = require("socket.io");
 const app = express();
 
 // callback function
-let server = app.listen(4000, function() {
+// let server = app.listen(4000, function() {
+//     console.log("Listening on port 4000");
+// });
+
+let server = app.listen(process.env.PORT || 4000, function() {
     console.log("Listening on port 4000");
 });
 

@@ -34,6 +34,11 @@ let hideCameraFlag = false;
 // we need client(s) to contact and get there 'public' addresses.
 let iceServers = {
   iceServers: [
+    {
+        urls: 'turn:numb.viagenie.ca:3489',
+        credential: '3cJIyEJ7pRLa',
+        username: 'jazzthedog.bowwow@gmail.com'
+    },      
     { urls: "stun:stun.services.mozilla.com" },
     { urls: "stun:stun.l.google.com:19302" },
   ],

@@ -7,8 +7,20 @@ const app = express();
 //     console.log("Listening on port 4000");
 // });
 
+var path = require('path');
+let myPath = path.join(__dirname + '/camguru/index.html');
+
+const myRouter = express.Router();
+myRouter.route('/camguru')
+    .get( (request, response) => {
+        response.sendFile(myPath);
+});
+app.use('/camguru', myRouter);
+
+
 let server = app.listen(process.env.PORT || 4000, function() {
     console.log("Listening on port 4000");
+    //console.log(mypath);
 });
 
 // interesting use of this method to point to a folder?? this will render index.html by default.

@@ -1,6 +1,7 @@
 //let socket = io.connect("http://localhost:4000");
 
 let socket = io();
+
 let divVideoChatLobby = document.getElementById("video-chat-lobby");
 let divVideoChat = document.getElementById("video-chat-room");
 let joinButton = document.getElementById("join");
@@ -265,3 +266,30 @@ function OnTrackFunction(event) {
     peerVideo.play();
   };
 }
+
+//In case user just closes browser tab or exits WITHOUT leave..
+socket.on('disconnect', function () {
+  // same code as leave button!
+  console.log("chat.js: disconnect");
+  socket.emit("leave", roomName);
+
+  divVideoChatLobby.style = "display:block";
+  divButtonGroup.style = "display:none";
+
+  if (userVideo.srcObject) {
+      userVideo.srcObject.getTracks()[0].stop();
+      userVideo.srcObject.getTracks()[1].stop();
+  }
+  if (peerVideo.srcObject) {
+      peerVideo.srcObject.getTracks()[0].stop();
+      peerVideo.srcObject.getTracks()[1].stop();
+  }
+
+  // close the connection we established previously
+  if (rtcPeerConnection) {
+      rtcPeerConnection.ontrack = null;
+      rtcPeerConnection.onicecandidate = null;
+      rtcPeerConnection.close();
+      rtcPeerConnection = null;
+  }
+});

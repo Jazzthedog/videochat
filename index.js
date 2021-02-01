@@ -2,21 +2,6 @@ const express = require("express");
 const socket = require("socket.io");
 const app = express();
 
-// callback function
-// let server = app.listen(4000, function() {
-//     console.log("Listening on port 4000");
-// });
-
-var path = require('path');
-let myPath = path.join(__dirname + '/camguru/index.html');
-
-const myRouter = express.Router();
-myRouter.route('/camguru')
-    .get( (request, response) => {
-        response.sendFile(myPath);
-});
-app.use('/camguru', myRouter);
-
 
 let server = app.listen(process.env.PORT || 4000, function() {
     console.log("Listening on port 4000");

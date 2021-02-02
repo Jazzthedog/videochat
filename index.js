@@ -17,6 +17,11 @@ let io = socket(server);
 io.on("connection", function(socket) {
     console.log("User Connected :", socket.id);
 
+    socket.on("sendMessage", function(data) {
+        io.emit("broadcastMessage", data);
+        console.log("broadcastMessage to socketid: ", socket.id);
+    })
+
     socket.on("join", function(roomName) {
         // each room can only have 2 particants
         // each room name is unique, so if room doesn't exist, we create one. 

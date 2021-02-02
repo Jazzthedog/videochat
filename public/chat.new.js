@@ -2,6 +2,11 @@
 
 let socket = io();
 
+let message = document.getElementById("message");
+let button = document.getElementById("send");
+let username = document.getElementById("username");
+let output = document.getElementById("output");
+
 let divVideoChatLobby = document.getElementById("video-chat-lobby");
 let divVideoChat = document.getElementById("video-chat-room");
 let joinButton = document.getElementById("join");
@@ -45,6 +50,19 @@ let iceServers = {
   ],
 };
 
+button.addEventListener('click', function() {
+  socket.emit("sendMessage",  {
+      message: message.value,
+      username: username.value,
+  });
+  console.log("chat.js: sendMessage");
+});
+
+// display what's broadcasted when socket get a 'broadcastMessage' event.
+socket.on("broadcastMessage", function(data) {
+  output.innerHTML += '<p><strong>' + data.username + ': <strong>' + data.message + '</p>';
+  console.log("chat.js: broadcastMessage");
+});
 
 joinButton.addEventListener("click", function() {
     console.log("chat.js: join");
